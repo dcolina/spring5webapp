@@ -2,8 +2,10 @@ package guru.springframework.spring5webapp.bootstrap;
 
 import guru.springframework.spring5webapp.domain.Author;
 import guru.springframework.spring5webapp.domain.Book;
+import guru.springframework.spring5webapp.domain.Publisher;
 import guru.springframework.spring5webapp.repositories.AuthorRepository;
 import guru.springframework.spring5webapp.repositories.BookRepository;
+import guru.springframework.spring5webapp.repositories.PublisherRepository;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
@@ -17,11 +19,25 @@ import java.util.Set;
 @Slf4j
 public class BootStrapData implements CommandLineRunner {
 
+    private final PublisherRepository publisherRepository;
     private final AuthorRepository authorRepository;
     private final BookRepository bookRepository;
 
     @Override
     public void run(String... args) {
+
+        log.info(String.format("Started in Bootstrap %n"));
+
+        Publisher publisher = Publisher.builder()
+                .name("SFG Publishing")
+                .city("St Petersburg")
+                .state("FL")
+                .build();
+
+        publisherRepository.save(publisher);
+
+        log.info(String.format("Publisher count: %s%n", publisherRepository.count()));
+
         Author eric = Author.builder()
                 .firstName("Eric")
                 .lastName("Evans")
@@ -33,9 +49,11 @@ public class BootStrapData implements CommandLineRunner {
                 .build();
 
         setAuthorBookRelationship(eric, ddd);
+//        setPublisherBookRelationship(publisher, ddd);
 
         authorRepository.save(eric);
         bookRepository.save(ddd);
+        publisherRepository.save(publisher);
 
         Author rod = Author.builder()
                 .firstName("Rod")
@@ -48,12 +66,22 @@ public class BootStrapData implements CommandLineRunner {
                 .build();
 
         setAuthorBookRelationship(rod, noEJB);
+        setPublisherBookRelationship(publisher, noEJB);
 
         authorRepository.save(rod);
         bookRepository.save(noEJB);
+        publisherRepository.save(publisher);
 
-        log.info("Started in Bootstrap");
         log.info(String.format("Number of Books: %s%n", bookRepository.count()));
+        log.info(String.format("Publisher Number of Books: %s%n", publisher.getBooks().size()));
+    }
+
+    private void setPublisherBookRelationship(Publisher publisher, Book book) {
+        Set<Book> books = new HashSet<>();
+        books.add(book);
+        publisher.setBooks(books);
+
+        book.setPublisher(publisher);
     }
 
     private void setAuthorBookRelationship(Author author, Book book) {
